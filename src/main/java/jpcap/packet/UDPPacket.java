@@ -33,6 +33,6 @@ public class UDPPacket extends IPPacket
          * @return a string representation of this packet
          */
 	public String toString(){
-		return super.toString()+" UDP "+src_port+" > "+dst_port;
+		return super.toString()+" UDP "+src_port+" > "+dst_port + "   " + length + "  " + data.length;
 	}
 }

@@ -2,6 +2,8 @@ package jpcap.util;
 
 import java.io.StringWriter;
 
+import org.apache.commons.lang.StringUtils;
+
 
 /**
  * Functions for formatting and printing binary data in hexadecimal.
@@ -100,7 +102,32 @@ public class HexHelper
       }
       return(sw.toString());
     }
+  
+  public static byte[] macToByte(String mac){
+      if(StringUtils.isBlank(mac) || mac.length() != 17){
+          return null;
+      }
+      String[] tmp = mac.split(":");
+      if(tmp.length != 6){
+          return null;
+      }
+      
+      byte[] result = new byte[6];
+      for(int i=0;i<6;i++){
+          String t = tmp[i].toUpperCase();
+          result[i] =  (byte) (toByte(t.charAt(0)) << 4 | toByte(t.charAt(1)));  
+      }
+      return result;
+  }
+  
+  public static byte toByte(char c){
+       return (byte) "0123456789ABCDEF".indexOf(c);   
+  }
 
+  public static void main(String[] args) {
+      byte[] mac = macToByte("00:0c:29:87:40:9e");
+      System.out.println(toMac(mac));
+  }
 
   static final String _rcsid = 
     "$Id: HexHelper.java,v 1.3 2001/06/04 05:07:06 pcharles Exp $";

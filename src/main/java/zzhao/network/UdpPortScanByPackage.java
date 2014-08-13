@@ -13,6 +13,7 @@ import jpcap.packet.ICMPPacket;
 import jpcap.packet.IPPacket;
 import jpcap.packet.Packet;
 import jpcap.packet.UDPPacket;
+import jpcap.util.HexHelper;
 import jpcap.util.NetUtil;
 
 import org.apache.commons.lang.StringUtils;
@@ -30,6 +31,8 @@ public class UdpPortScanByPackage {
     Inet4Address address;
     InetAddress target;
     String targetAddress;
+    byte[] targetMac;
+    
     JpcapCaptor jpcap;
     JpcapSender sender;
     Random random;
@@ -43,10 +46,15 @@ public class UdpPortScanByPackage {
         address = NetUtil.getIpV4Address(net);
         jpcap = JpcapCaptor.openDevice(net, 2000, false, -1);
         sender = JpcapSender.openRawSocket();
-        target = InetAddress.getByName("10.240.140.195");
+        target = InetAddress.getByName("10.240.140.109");
+        targetMac = HexHelper.macToByte("00:0c:29:87:40:9e");
         targetAddress = target.getHostAddress();
+        
+        //targetMac =  java.net.NetworkInterface.getByInetAddress(target).getHardwareAddress();
+        
         random = new Random();
         
+        logger.info("local net :" + net.description);
         logger.info("local address : " + address.getHostAddress());
         logger.info("target address : " + target.getHostAddress());
     }
@@ -62,19 +70,19 @@ public class UdpPortScanByPackage {
             int startPort = 10000;
             int endPort = 10010;
 
-            for(int i=0; i < 1; i++){
+            for(int i=0; i < 3; i++){
                 for (int port = startPort; port < endPort; port++) {
-                    UDPPacket udpPackage = new UDPPacket(testPort + i, port);
+                    UDPPacket udpPackage = new UDPPacket(testPort , port);
                     udpPackage.setIPv4Parameter(0, false, false, false, 0, false, false, false, 0, 5000 + random.nextInt(300), 128, IPPacket.IPPROTO_UDP,
                                                address, target);
                     udpPackage.data = "".getBytes();
                     udpPackage.len = 8;
 
-                    EthernetPacket ether = new EthernetPacket();
-                    ether.frametype = EthernetPacket.ETHERTYPE_IP;
-                    ether.src_mac = net.mac_address;
-                    ether.dst_mac = new byte[] {(byte) 0, (byte) 6, (byte) 7, (byte) 8, (byte) 9, (byte) 10};
-                    udpPackage.datalink = ether;
+//                    EthernetPacket ether = new EthernetPacket();
+//                    ether.frametype = EthernetPacket.ETHERTYPE_IP;
+//                    ether.src_mac = net.mac_address;
+//                    ether.dst_mac = targetMac;
+//                    udpPackage.datalink = ether;
                     sender.sendPacket(udpPackage);
                     Thread.sleep(1000);
                 }
@@ -116,7 +124,10 @@ public class UdpPortScanByPackage {
                     UDPPacket pacakge = (UDPPacket) p;
                     if(StringUtils.equals(address.getHostAddress(), pacakge.src_ip.getHostAddress())
                         && StringUtils.equals(target.getHostAddress(), pacakge.dst_ip.getHostAddress())){
-                        //System.out.println(pacakge);
+//                        System.out.println(pacakge.src_ip);
+                        EthernetPacket ether  = (EthernetPacket)pacakge.datalink;
+                        System.out.println(HexHelper.toMac(ether.src_mac));
+                        System.out.println(HexHelper.toMac(ether.dst_mac));
                     }
                 }
             } catch (Throwable e) {

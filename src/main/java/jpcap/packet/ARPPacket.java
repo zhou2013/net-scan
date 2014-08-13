@@ -53,7 +53,7 @@ public class ARPPacket extends Packet
 	/** Target protocol address */
 	public byte[] target_protoaddr;
 
-	void setValue(short hardtype,short prototype,short hlen,short plen,
+	public void setValue(short hardtype,short prototype,short hlen,short plen,
 			 short operation,byte[] sha,byte[] spa,byte[] tha,byte[] tpa){
 		this.hardtype=hardtype;
 		this.prototype=prototype;

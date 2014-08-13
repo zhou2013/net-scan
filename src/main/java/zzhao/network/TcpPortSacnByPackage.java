@@ -19,6 +19,7 @@ import jpcap.packet.EthernetPacket;
 import jpcap.packet.IPPacket;
 import jpcap.packet.Packet;
 import jpcap.packet.TCPPacket;
+import jpcap.util.HexHelper;
 import jpcap.util.NetUtil;
 
 import org.apache.commons.lang.StringUtils;
@@ -56,6 +57,8 @@ public class TcpPortSacnByPackage {
     private InetAddress target;
 
     private String targetAddress;
+    
+    private byte[] targetMac;
 
     private void init() throws UnknownHostException {
         net = NetUtil.getActiveDevice();
@@ -63,6 +66,7 @@ public class TcpPortSacnByPackage {
         localAddress = address.getHostAddress();
         target = InetAddress.getByName("10.240.137.162");
         targetAddress = target.getHostAddress();
+        targetMac = HexHelper.macToByte("44:37:E6:99:DC:92");
     }
 
     public void doScan() {
@@ -72,7 +76,7 @@ public class TcpPortSacnByPackage {
             logger.info("local address : " + localAddress);
             logger.info("target address : " + targetAddress);
 
-            jpcap = JpcapCaptor.openDevice(net, 2000, true, -1);
+            jpcap = JpcapCaptor.openDevice(net, 2000, false, -1);
 
             Thread recevieThread = new Thread(new AckCheck());
             recevieThread.setDaemon(true);
@@ -87,6 +91,7 @@ public class TcpPortSacnByPackage {
                     TCPPacket tcpPacket = generateTcpPackage();
                     prepareSYNPackage(tcpPacket, target, port);
                     sender.sendPacket(tcpPacket);
+                    tcpPacket = null;
             }
 
             Thread.sleep(30000000);
@@ -125,7 +130,6 @@ public class TcpPortSacnByPackage {
                     if (StringUtils.equals(localAddress, pacakge.dst_ip.getHostAddress()) 
                                     && StringUtils.equals(targetAddress, pacakge.src_ip.getHostAddress()))  {
                         if (pacakge.ack == true && pacakge.syn == true) {
-                            //System.out.println(pacakge);
                             if(checkTcpPackage(pacakge)){
                                 System.out.println(pacakge.src_ip.getHostAddress() + " : " + pacakge.src_port + " is open!");
                                 ports.add(String.valueOf(pacakge.src_port));
@@ -157,7 +161,7 @@ public class TcpPortSacnByPackage {
         EthernetPacket ether = new EthernetPacket();
         ether.frametype = EthernetPacket.ETHERTYPE_IP;
         ether.src_mac = net.mac_address;
-        ether.dst_mac = new byte[] {(byte) 0, (byte) 6, (byte) 7, (byte) 8, (byte) 9, (byte) 10};
+        ether.dst_mac = targetMac;
         tcpPacket.datalink = ether;
         return tcpPacket;
     }
