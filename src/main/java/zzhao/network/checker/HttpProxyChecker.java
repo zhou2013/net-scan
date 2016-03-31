@@ -15,6 +15,7 @@ import org.apache.http.params.CoreConnectionPNames;
 import org.apache.http.params.CoreProtocolPNames;
 
 import zzhao.network.PortNotOpenException;
+import zzhao.network.http.HttpClientConnectionManager;
 
 /**
  * http 代理检查
@@ -60,7 +61,7 @@ public class HttpProxyChecker {
     }
 
     public static String getHttpType(String host, int port) throws PortNotOpenException {
-        DefaultHttpClient httpClient = new DefaultHttpClient();
+        DefaultHttpClient httpClient = new DefaultHttpClient(new HttpClientConnectionManager());
         httpClient.setHttpRequestRetryHandler(new DefaultHttpRequestRetryHandler(0, false));
         httpClient.getParams().setParameter(CoreProtocolPNames.PROTOCOL_VERSION, HttpVersion.HTTP_1_1);
         httpClient.getParams().setParameter(CoreConnectionPNames.CONNECTION_TIMEOUT, CONNECT_TIMEOUT);
